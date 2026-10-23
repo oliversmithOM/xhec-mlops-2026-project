@@ -29,7 +29,33 @@ uv run python -m src.modelling.main data/abalone.csv
 uv run uvicorn src.web_service.main:app --host 127.0.0.1 --port 8000
 ```
 
-Open **http://127.0.0.1:8000/docs** to test predictions interactively via Swagger UI, or send a request from another terminal:
+Open **http://127.0.0.1:8000/** for the prediction dashboard. Use the prefilled
+example or enter your measurements, select **Estimate age**, and save the
+result as JSON. Changing inputs clears the previous estimate so it cannot be
+mistaken for a result for the new measurements. The interface works on mobile
+and desktop, with keyboard navigation, visible validation, and loading/error
+states. It uses the same `/predict` API and does not store your entries.
+
+The design adapts FORM's warm-neutral tokens and rounded cards
+([theme](https://github.com/RyanBalech/form-app/blob/main/src/theme.ts)) and
+PrepElite's labelled fields and metric-card hierarchy
+([components](https://github.com/RyanBalech/prepelite/tree/main/src/components/ui)).
+The frontend is plain HTML/CSS/JavaScript served by FastAPI, with no Node build,
+external fonts, or additional runtime service.
+
+For browser checks against a running local or container API:
+
+```bash
+uv run --locked --group browser playwright install chromium
+uv run --locked --group browser python -m scripts.check_ui
+```
+
+These cover prediction and JSON export, loading and validation states,
+network failure recovery, keyboard operation, and mobile layouts. The same
+checks run against the Docker container in CI. Browser dependencies are
+optional and are not installed in the runtime image.
+
+Open **http://127.0.0.1:8000/docs** for Swagger API documentation, or send a request from another terminal:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/predict -H "Content-Type: application/json" --data-binary @examples/predict.json

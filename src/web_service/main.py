@@ -7,13 +7,15 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from .lib.inference import predict_age, validate_model
 from .lib.models import AbaloneFeatures, Health, Prediction
 from .utils import load_object
 
 DEFAULT_MODEL_PATH = Path(__file__).resolve().parent / "local_objects/model.pkl"
+STATIC_PATH = Path(__file__).resolve().parent / "static"
 logger = logging.getLogger(__name__)
 
 
@@ -47,7 +49,21 @@ def create_app(model_path: Path | None = None) -> FastAPI:
         ]
         return JSONResponse(status_code=422, content={"detail": errors})
 
-    @app.get("/", response_model=Health, include_in_schema=False)
+    app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
+
+    @app.get("/", response_class=FileResponse, include_in_schema=False)
+    def interface() -> FileResponse:
+        """Serve the self-contained prediction interface."""
+        return FileResponse(
+            STATIC_PATH / "index.html",
+            headers={
+                "Content-Security-Policy": "default-src 'self'; script-src 'self'; "
+                "style-src 'self'; img-src 'self'; connect-src 'self'; "
+                "frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
+
     @app.get("/health", response_model=Health)
     def health(request: Request) -> Health:
         """Success means startup loaded and validated the model."""
