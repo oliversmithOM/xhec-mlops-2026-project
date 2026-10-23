@@ -41,6 +41,12 @@ jobs:
       - name: Verify container predictions and validation
         run: uv run --locked python -m scripts.smoke_api
 
+      - name: Install browser test dependencies
+        run: uv run --locked --group browser playwright install --with-deps chromium
+
+      - name: Exercise prediction interface in Chromium
+        run: uv run --locked --group browser python -m scripts.check_ui
+
       - name: Container logs and cleanup
         if: always()
         run: |

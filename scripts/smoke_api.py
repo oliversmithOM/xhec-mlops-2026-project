@@ -57,6 +57,10 @@ def main(base_url: str, model_path: Path) -> None:
         raise AssertionError("Invalid inputs were accepted")
     with urlopen(f"{base_url}/docs", timeout=10) as response:
         assert response.status == 200
+    with urlopen(f"{base_url}/", timeout=10) as response:
+        assert "Specimen measurements" in response.read().decode()
+    with urlopen(f"{base_url}/static/app.js", timeout=10) as response:
+        assert response.status == 200
     print(f"API smoke test passed: {json.dumps(result)}")
 
 

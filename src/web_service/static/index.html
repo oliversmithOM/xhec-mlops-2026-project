@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0c0c0b" />
+    <meta
+      name="description"
+      content="Explore abalone age prediction with a transparent, reproducible machine-learning model."
+    />
+    <title>Abalone — A closer look</title>
+    <link rel="icon" href="/static/shell.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/static/app.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#predictor">Skip to prediction form</a>
+    <header class="header">
+      <a class="brand" href="/" aria-label="Abalone home"
+        ><img src="/static/shell.svg" width="34" height="34" alt="" /><span
+          >abalone<span class="brand-dot">.</span></span
+        ></a
+      >
+      <nav aria-label="Main navigation">
+        <a href="#predictor" class="nav-active">Predict</a
+        ><a href="#method">The model</a
+        ><a href="/docs">API docs <span aria-hidden="true">↗</span></a>
+      </nav>
+      <span class="connection" id="connection" role="status"
+        ><span class="status-dot"></span
+        ><span id="connection-label">Connecting</span></span
+      >
+    </header>
+
+    <main class="container">
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">
+            <span class="small-line"></span>MEASURE. UNDERSTAND. ESTIMATE.
+          </p>
+          <h1 id="page-title">
+            A closer look.<br /><span>An age estimate.</span>
+          </h1>
+        </div>
+        <div class="intro-note">
+          <span class="edition">FIELD NOTES / 01</span>
+          <p>
+            Eight measurements. One considered estimate. <br />Explore what a
+            shell can tell us, without counting its rings.
+          </p>
+          <a href="#method">Meet the model <span aria-hidden="true">↓</span></a>
+        </div>
+      </section>
+
+      <section
+        class="workspace"
+        id="predictor"
+        aria-label="Prediction workspace"
+      >
+        <div class="panel form-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">01 / INPUT</p>
+              <h2>Specimen measurements</h2>
+            </div>
+            <button type="button" class="text-button" id="example-button">
+              <span aria-hidden="true">↺</span> Load example
+            </button>
+          </div>
+          <p class="form-hint" id="units-hint">
+            Use the original dataset scale. All measurements must be zero or
+            greater.
+          </p>
+          <form id="prediction-form" aria-describedby="units-hint">
+            <fieldset id="measurement-fields">
+              <legend class="sr-only">Abalone measurements</legend>
+              <fieldset class="sex-field">
+                <legend>Sex <span class="field-meta">Select one</span></legend>
+                <div class="segments">
+                  <label
+                    ><input
+                      type="radio"
+                      name="sex"
+                      value="M"
+                      checked
+                      required
+                    /><span>Male <small>M</small></span></label
+                  >
+                  <label
+                    ><input type="radio" name="sex" value="F" /><span
+                      >Female <small>F</small></span
+                    ></label
+                  >
+                  <label
+                    ><input type="radio" name="sex" value="I" /><span
+                      >Infant <small>I</small></span
+                    ></label
+                  >
+                </div>
+              </fieldset>
+              <div class="section-heading">
+                <span>Dimensions</span
+                ><span class="field-meta">Dataset scale</span>
+              </div>
+              <div class="input-grid dimensions">
+                <div class="field">
+                  <label for="length">Length</label
+                  ><input
+                    id="length"
+                    name="length"
+                    type="number"
+                    step="any"
+                    min="0"
+                    required
+                    inputmode="decimal"
+                    placeholder="0.000"
+                    value="0.455"
+                  />
+                </div>
+                <div class="field">
+                  <label for="diameter">Diameter</label
+                  ><input
+                    id="diameter"
+                    name="diameter"
+                    type="number"
+                    step="any"
+                    min="0"
+                    required
+                    inputmode="decimal"
+                    placeholder="0.000"
+                    value="0.365"
+                  />
+                </div>
+                <div class="field">
+                  <label for="height">Height</label
+                  ><input
+                    id="height"
+                    name="height"
+                    type="number"
+                    step="any"
+                    min="0"
+                    required
+                    inputmode="decimal"
+                    placeholder="0.000"
+                    value="0.095"
+                  />
+                </div>
+              </div>
+              <div class="section-heading">
+                <span>Weight measurements</span
+                ><span class="field-meta">Dataset scale</span>
+              </div>
+              <div class="input-grid weights">
+                <div class="field">
+                  <label for="whole_weight">Whole weight</label
+                  ><input
+                    id="whole_weight"
+                    name="whole_weight"
+                    type="number"
+                    step="any"
+                    min="0"
+                    required
+                    inputmode="decimal"
+                    placeholder="0.000"
+                    value="0.514"
+                  />
+                </div>
+                <div class="field">
+                  <label for="shucked_weight">Shucked weight</label
+                  ><input
+                    id="shucked_weight"
+                    name="shucked_weight"
+                    type="number"
+                    step="any"
+                    min="0"
+                    required
+                    inputmode="decimal"
+                    placeholder="0.000"
+                    value="0.2245"
+                  />
+                </div>
+                <div class="field">
+                  <label for="viscera_weight">Viscera weight</label
+                  ><input
+                    id="viscera_weight"
+                    name="viscera_weight"
+                    type="number"
+                    step="any"
+                    min="0"
+                    required
+                    inputmode="decimal"
+                    placeholder="0.000"
+                    value="0.101"
+                  />
+                </div>
+                <div class="field">
+                  <label for="shell_weight">Shell weight</label
+                  ><input
+                    id="shell_weight"
+                    name="shell_weight"
+                    type="number"
+                    step="any"
+                    min="0"
+                    required
+                    inputmode="decimal"
+                    placeholder="0.000"
+                    value="0.15"
+                  />
+                </div>
+              </div>
+            </fieldset>
+            <p class="form-error" id="form-error" role="alert" hidden></p>
+            <div class="form-actions">
+              <button class="primary-button" id="predict-button" type="submit">
+                <span id="predict-label">Estimate age</span
+                ><span class="button-arrow" aria-hidden="true">↗</span></button
+              ><button class="reset-button" id="reset-button" type="button">
+                Clear
+              </button>
+            </div>
+            <p class="privacy-note">
+              <span aria-hidden="true">◎</span> Your measurements are processed
+              by this model, not stored by this interface.
+            </p>
+          </form>
+        </div>
+
+        <div class="results-column">
+          <section
+            class="panel result-panel"
+            aria-labelledby="result-heading"
+            aria-busy="false"
+            id="result-panel"
+          >
+            <div class="result-top">
+              <p class="eyebrow">02 / ESTIMATE</p>
+              <span class="result-badge" id="result-badge"
+                >Ready when you are</span
+              >
+            </div>
+            <div class="shell-art" aria-hidden="true">
+              <div class="orbit orbit-one"></div>
+              <div class="orbit orbit-two"></div>
+              <img
+                src="/static/shell.svg"
+                alt=""
+                width="180"
+                height="180"
+              /><span class="art-caption">HALIOTIS / ABALONE</span>
+            </div>
+            <div class="result-copy" aria-live="polite" aria-atomic="true">
+              <h2 id="result-heading">Every shell has a story.</h2>
+              <div class="age-display" id="age-display" hidden>
+                <span id="age-value"></span><span class="age-unit">years</span>
+              </div>
+              <p id="result-description">
+                Start with the example or enter your own measurements to
+                estimate its age.
+              </p>
+            </div>
+            <div class="result-footer">
+              <div>
+                <span class="field-meta">MODEL FINGERPRINT</span
+                ><code id="model-fingerprint">Connecting…</code>
+              </div>
+              <button
+                type="button"
+                class="export-button"
+                id="export-button"
+                disabled
+                aria-label="Download prediction as JSON"
+              >
+                Save result <span aria-hidden="true">↓</span>
+              </button>
+            </div>
+          </section>
+          <aside class="insight">
+            <span class="insight-icon" aria-hidden="true">i</span>
+            <div>
+              <h3>An estimate, not a certainty.</h3>
+              <p>
+                The baseline’s average absolute error is 1.59 years on held-out
+                data. This is not a confidence interval for your specimen.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section
+        class="method-section"
+        id="method"
+        aria-labelledby="method-heading"
+      >
+        <div class="method-heading">
+          <div>
+            <p class="eyebrow">BEHIND THE ESTIMATE</p>
+            <h2 id="method-heading">
+              Simple by design.<br />Measured in practice.
+            </h2>
+          </div>
+          <p>
+            A reproducible linear-regression baseline. The encoder and scaler
+            are fitted on training data and saved with the model, so every
+            prediction follows the same path.
+          </p>
+        </div>
+        <div class="metrics" aria-label="Baseline evaluation metrics">
+          <article>
+            <span class="metric-label">DATASET</span>
+            <p class="metric-value">4,177<span>specimens</span></p>
+            <p>Original Abalone observations</p>
+          </article>
+          <article>
+            <span class="metric-label">HELD-OUT SAMPLE</span>
+            <p class="metric-value">836<span>specimens</span></p>
+            <p>20% test split · seed 42</p>
+          </article>
+          <article>
+            <span class="metric-label">ROOT MEAN SQUARED ERROR</span>
+            <p class="metric-value">2.212<span>years</span></p>
+            <p>Baseline test-set benchmark</p>
+          </article>
+          <article>
+            <span class="metric-label">COEFFICIENT OF DETERMINATION</span>
+            <p class="metric-value">0.548<span>R²</span></p>
+            <p>Single-split evaluation</p>
+          </article>
+        </div>
+        <details class="method-details">
+          <summary>
+            How should I interpret the result?<span aria-hidden="true">+</span>
+          </summary>
+          <p>
+            The target is age in years: ring count + 1.5. The model uses sex and
+            seven physical measurements; it never receives the ring count. These
+            benchmarks describe the project baseline, not every possible
+            replacement model. Very unusual measurements can produce unreliable
+            or even negative estimates. We show the model’s output without
+            clipping it. Verify the dataset scale before drawing conclusions.
+          </p>
+        </details>
+      </section>
+    </main>
+    <footer class="footer">
+      <span
+        >abalone<span class="brand-dot">.</span>
+        <span class="footer-caption"
+          >A small study in understanding.</span
+        ></span
+      ><span
+        >X–HEC MLOps · 2026 <span class="footer-divider">/</span>
+        <a href="/docs">Explore the API ↗</a></span
+      >
+    </footer>
+    <noscript
+      ><p class="noscript">
+        JavaScript is required for the prediction form. You can also use the
+        <a href="/docs">API documentation</a>.
+      </p></noscript
+    >
+  </body>
+</html>

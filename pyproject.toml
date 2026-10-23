@@ -25,6 +25,9 @@ dependencies = [
 ]
 
 [dependency-groups]
+browser = [
+  "playwright>=1.56,<2",
+]
 dev = [
   "pre-commit>=4,<5",
   "ruff>=0.12,<1",

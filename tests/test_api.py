@@ -52,10 +52,29 @@ class ApiTests(unittest.TestCase):
                     "model_sha256": checksum,
                 },
             )
-            self.assertEqual(client.get("/").status_code, 200)
+            home = client.get("/")
+            self.assertEqual(home.status_code, 200)
+            self.assertIn("text/html", home.headers["content-type"])
+            self.assertIn("Specimen measurements", home.text)
+            self.assertIn("default-src 'self'", home.headers["content-security-policy"])
             self.assertEqual(client.get("/docs").status_code, 200)
             schema = client.get("/openapi.json").json()
             self.assertIn("/predict", schema["paths"])
+
+    def test_interface_assets_and_private_file_isolation(self):
+        with TestClient(create_app(self.path)) as client:
+            for name in ["app.css", "app.js", "shell.svg"]:
+                with self.subTest(asset=name):
+                    response = client.get(f"/static/{name}")
+                    self.assertEqual(response.status_code, 200)
+                    self.assertTrue(response.content)
+            for path in [
+                "/static/../local_objects/model.pkl",
+                "/static/%2e%2e/local_objects/model.pkl",
+                "/.git/config",
+            ]:
+                with self.subTest(path=path):
+                    self.assertEqual(client.get(path).status_code, 404)
 
     def test_reject_invalid_inputs(self):
         cases = [
