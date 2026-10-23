@@ -14,9 +14,16 @@ def main(base_url: str, screenshots: Path | None) -> None:
         browser = browser_driver.chromium.launch()
         context = browser.new_context(viewport={"width": 1440, "height": 1100})
         page = context.new_page()
+        page.emulate_media(reduced_motion="no-preference")
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(base_url)
         expect(page.get_by_text("Model connected", exact=True)).to_be_visible()
+        assert (
+            page.locator(".intro").evaluate(
+                "element => getComputedStyle(element).animationName"
+            )
+            == "arrive"
+        )
         expect(page.locator("#age-display")).to_be_hidden()
         expect(
             page.get_by_role("button", name="Download prediction as JSON")
@@ -126,6 +133,73 @@ def main(base_url: str, screenshots: Path | None) -> None:
         expect(page.locator(".method-details")).to_have_attribute("open", "")
         page.emulate_media(reduced_motion="reduce")
         assert page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches")
+        assert (
+            page.locator(".intro").evaluate(
+                "element => getComputedStyle(element).animationName"
+            )
+            == "none"
+        )
+        assert (
+            page.locator(".age-display").evaluate(
+                "element => getComputedStyle(element).animationName"
+            )
+            == "none"
+        )
+
+        # Notebook: exact exports, references, restoration, capacity and privacy.
+        page.get_by_role("button", name="Clear notebook", exact=True).click()
+        expect(page.locator("#history-empty")).to_be_visible()
+        page.locator("#try-example").click()
+        expect(page.get_by_label("Length", exact=True)).to_have_value("0.455")
+        for _ in range(2):
+            with page.expect_response(
+                lambda response: response.url.endswith("/predict")
+            ):
+                page.get_by_role("button", name="Estimate age", exact=True).click()
+            expect(page.locator("#predict-button")).to_be_enabled()
+        expect(page.locator("#history-rows tr")).to_have_count(2)
+        page.locator("#history-rows tr").last.get_by_role(
+            "button", name="Pin", exact=False
+        ).click()
+        expect(
+            page.locator("#history-rows tr").first.locator("td").nth(4)
+        ).to_have_text("0.00")
+        page.get_by_label("Length", exact=True).fill("0.6")
+        page.locator("#history-rows tr").first.get_by_role(
+            "button", name="Restore", exact=False
+        ).click()
+        expect(page.get_by_label("Length", exact=True)).to_have_value("0.455")
+        expect(page.locator("#age-display")).to_be_hidden()
+        with page.expect_download() as notebook_download:
+            page.get_by_role("button", name="Download notebook", exact=True).click()
+        notebook = json.loads(Path(notebook_download.value.path()).read_text())
+        assert len(notebook["results"]) == 2
+        assert notebook["reference"]["id"] == notebook["results"][1]["id"]
+        assert notebook["results"][0]["measurements"]["length"] == 0.455
+        page.route(
+            "**/predict",
+            lambda route: route.fulfill(
+                status=200,
+                content_type="application/json",
+                body=json.dumps({"age_years": 15, "model_sha256": "different-model"}),
+            ),
+        )
+        for _ in range(13):
+            with page.expect_response(
+                lambda response: response.url.endswith("/predict")
+            ):
+                page.get_by_role("button", name="Estimate age", exact=True).click()
+            expect(page.locator("#predict-button")).to_be_enabled()
+            if _ == 0:
+                expect(
+                    page.locator("#history-rows tr").first.locator("td").nth(4)
+                ).to_have_text("Different model")
+        expect(page.locator("#history-rows tr")).to_have_count(12)
+        expect(page.locator("#unpin")).to_be_hidden()
+        page.unroute("**/predict")
+        page.reload()
+        expect(page.locator("#history-empty")).to_be_visible()
+        expect(page.locator("#history-export")).to_be_disabled()
         assert not errors, errors
         browser.close()
     with urlopen(f"{base_url}/health", timeout=5) as response:

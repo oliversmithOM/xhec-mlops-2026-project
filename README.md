@@ -34,7 +34,14 @@ example or enter your measurements, select **Estimate age**, and save the
 result as JSON. Changing inputs clears the previous estimate so it cannot be
 mistaken for a result for the new measurements. The interface works on mobile
 and desktop, with keyboard navigation, visible validation, and loading/error
-states. It uses the same `/predict` API and does not store your entries.
+states. It uses the same `/predict` API. The field notebook keeps the latest
+12 successful estimates in tab memory only (no local storage or database).
+Pin a reference to compare predicted ages, restore measurements to try a
+variation, and download the notebook as JSON. Comparisons across different
+model fingerprints are deliberately withheld. Reloading or clearing the
+notebook removes its history. The footer's **Try an example** loads sample inputs.
+Subtle entrance, result, loading, and button animations use native CSS (no
+animation library or build step). Reduced-motion preferences disable motion.
 
 The design adapts FORM's warm-neutral tokens and rounded cards
 ([theme](https://github.com/RyanBalech/form-app/blob/main/src/theme.ts)) and

@@ -220,7 +220,8 @@
             </div>
             <p class="privacy-note">
               <span aria-hidden="true">◎</span> Your measurements are processed
-              by this model, not stored by this interface.
+              by this model. Your last 12 results stay in this tab's memory only
+              and disappear when you reload or clear the notebook.
             </p>
           </form>
         </div>
@@ -287,6 +288,70 @@
         </div>
       </section>
 
+      <section class="panel notebook" aria-labelledby="notebook-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">03 / FIELD NOTEBOOK</p>
+            <h2 id="notebook-heading">Compare your discoveries.</h2>
+          </div>
+          <span id="history-count" role="status">0 / 12 results</span>
+        </div>
+        <p>
+          Each successful estimate is recorded here for this visit. Pin a
+          reference to compare ages, or restore its measurements to explore a
+          variation. Differences are model outputs, not evidence of causation.
+        </p>
+        <div class="notebook-actions">
+          <button
+            type="button"
+            class="export-button"
+            id="history-export"
+            disabled
+          >
+            Download notebook
+          </button>
+          <button
+            type="button"
+            class="reset-button"
+            id="history-clear"
+            disabled
+          >
+            Clear notebook
+          </button>
+          <button type="button" class="reset-button" id="unpin" hidden>
+            Unpin reference
+          </button>
+        </div>
+        <p id="comparison-note" role="status">
+          Pin any result below to set a reference.
+        </p>
+        <p id="history-empty">Your first estimate starts the notebook.</p>
+        <div
+          class="notebook-scroll"
+          tabindex="0"
+          role="region"
+          aria-label="Session predictions"
+        >
+          <table id="history-table" hidden>
+            <caption class="sr-only">
+              Recent estimates, newest first. Age differences use the pinned
+              reference.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Specimen</th>
+                <th scope="col">Sex</th>
+                <th scope="col">Length</th>
+                <th scope="col">Age (years)</th>
+                <th scope="col">Difference (years)</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="history-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section
         class="method-section"
         id="method"
@@ -350,7 +415,7 @@
         ></span
       ><span
         >X–HEC MLOps · 2026 <span class="footer-divider">/</span>
-        <a href="/docs">Explore the API ↗</a></span
+        <a href="#predictor" id="try-example">Try an example ↗</a></span
       >
     </footer>
     <noscript
