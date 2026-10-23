@@ -21,6 +21,106 @@ const example = {
 let savedResult = null;
 let activeHash = "";
 let busy = false;
+let history = [];
+let reference = null;
+let sequence = 0;
+
+function loadMeasurements(measurements, label) {
+  if (busy) return;
+  for (const [key, value] of Object.entries(measurements))
+    form.elements.namedItem(key).value = value;
+  clearResult(label);
+  document.querySelector("#length").focus();
+}
+
+function renderHistory() {
+  const rows = document.querySelector("#history-rows");
+  rows.replaceChildren();
+  document.querySelector("#history-count").textContent =
+    `${history.length} / 12 results`;
+  document.querySelector("#history-empty").hidden = history.length > 0;
+  document.querySelector("#history-table").hidden = history.length === 0;
+  document.querySelector("#history-export").disabled = !history.length;
+  document.querySelector("#history-clear").disabled = !history.length;
+  document.querySelector("#unpin").hidden = !reference;
+  document.querySelector("#comparison-note").textContent = reference
+    ? `Reference: specimen ${reference.id} · ${reference.age_years.toFixed(2)} years. Comparisons require the same model fingerprint.`
+    : "Pin any result below to set a reference.";
+  for (const item of history) {
+    const row = document.createElement("tr");
+    let delta = "—";
+    if (reference) {
+      const difference = item.age_years - reference.age_years;
+      delta =
+        item.model_sha256 === reference.model_sha256
+          ? `${difference > 0 ? "+" : ""}${difference.toFixed(2)}`
+          : "Different model";
+    }
+    for (const value of [
+      `#${item.id}`,
+      item.measurements.sex,
+      item.measurements.length,
+      item.age_years.toFixed(2),
+      delta,
+    ]) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    }
+    const actions = document.createElement("td");
+    for (const action of ["Pin", "Restore"]) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "text-button";
+      button.textContent = action;
+      button.setAttribute("aria-label", `${action} specimen ${item.id}`);
+      if (action === "Pin")
+        button.setAttribute("aria-pressed", String(reference?.id === item.id));
+      button.disabled = action === "Restore" && busy;
+      button.addEventListener("click", () => {
+        if (action === "Pin") {
+          reference = item;
+          renderHistory();
+        } else
+          loadMeasurements(item.measurements, `Specimen ${item.id} restored`);
+      });
+      actions.append(button);
+    }
+    row.append(actions);
+    rows.append(row);
+  }
+}
+
+function downloadJSON(value, filename) {
+  const url = URL.createObjectURL(
+    new Blob([JSON.stringify(value, null, 2)], { type: "application/json" }),
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+document.querySelector("#history-export").addEventListener("click", () => {
+  if (history.length)
+    downloadJSON(
+      { results: history, reference, exported_at: new Date().toISOString() },
+      "abalone-notebook.json",
+    );
+});
+document.querySelector("#history-clear").addEventListener("click", () => {
+  history = [];
+  reference = null;
+  renderHistory();
+});
+document.querySelector("#unpin").addEventListener("click", () => {
+  reference = null;
+  renderHistory();
+});
+document
+  .querySelector("#try-example")
+  .addEventListener("click", () => loadMeasurements(example, "Example loaded"));
 
 function connection(online) {
   document.querySelector("#connection").dataset.state = online
@@ -55,6 +155,7 @@ function clearResult(label = "Ready when you are") {
 
 function setBusy(value) {
   busy = value;
+  renderHistory();
   document.querySelector("#measurement-fields").disabled = value;
   predictButton.disabled = value;
   exampleButton.disabled = value;
@@ -88,9 +189,7 @@ form.addEventListener("input", () => {
 });
 
 exampleButton.addEventListener("click", () => {
-  for (const [key, value] of Object.entries(example))
-    form.elements.namedItem(key).value = value;
-  clearResult("Example loaded");
+  loadMeasurements(example, "Example loaded");
 });
 
 resetButton.addEventListener("click", () => {
@@ -151,6 +250,11 @@ form.addEventListener("submit", async (event) => {
       ...result,
       estimated_at: new Date().toISOString(),
     };
+    history.unshift({ id: ++sequence, ...savedResult });
+    history = history.slice(0, 12);
+    if (reference && !history.some((item) => item.id === reference.id))
+      reference = null;
+    renderHistory();
     activeHash = result.model_sha256;
     connection(true);
     showHash(activeHash);
@@ -192,16 +296,7 @@ form.addEventListener("submit", async (event) => {
 
 exportButton.addEventListener("click", () => {
   if (!savedResult) return;
-  const url = URL.createObjectURL(
-    new Blob([JSON.stringify(savedResult, null, 2)], {
-      type: "application/json",
-    }),
-  );
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "abalone-estimate.json";
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadJSON(savedResult, "abalone-estimate.json");
 });
 
 checkHealth();
